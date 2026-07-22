@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="새 접수건 등록"
+            android:textColor="@color/textMain"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView style="@style/LabelStyle" android:text="접수번호" />
+        <EditText
+            android:id="@+id/receiptNo"
+            style="@style/FieldStyle"
+            android:hint="예: M253-26-00269"
+            android:inputType="textCapCharacters" />
+
+        <TextView style="@style/LabelStyle" android:text="CSI 접수번호" />
+        <EditText
+            android:id="@+id/csiNo"
+            style="@style/FieldStyle"
+            android:hint="예: AC-2026-067251"
+            android:inputType="textCapCharacters" />
+
+        <TextView style="@style/LabelStyle" android:text="공사명 (현장명)" />
+        <EditText
+            android:id="@+id/workName"
+            style="@style/FieldStyle"
+            android:hint="예: 사석"
+            android:inputType="text" />
+
+        <TextView style="@style/LabelStyle" android:text="시료명" />
+        <EditText
+            android:id="@+id/sampleName"
+            style="@style/FieldStyle"
+            android:hint="예: 남면 학동항 정비공사(총괄 및 1차분)"
+            android:inputType="text" />
+
+        <TextView style="@style/LabelStyle" android:text="비고" />
+        <EditText
+            android:id="@+id/note"
+            style="@style/FieldStyle"
+            android:hint="(선택)"
+            android:inputType="text" />
+
+        <Button
+            android:id="@+id/btnSaveShoot"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="24dp"
+            android:text="저장하고 촬영 시작"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/btnSaveOnly"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="저장만 하기" />
+
+        <Button
+            android:id="@+id/btnGallery"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="이 접수건 사진 보기"
+            android:visibility="gone" />
+    </LinearLayout>
+</ScrollView>

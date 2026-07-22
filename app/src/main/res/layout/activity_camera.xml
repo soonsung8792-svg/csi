@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000"
+    android:orientation="vertical">
+
+    <!-- 상단: 시험단계 / 시험항목 선택 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#111111"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+        <RadioGroup
+            android:id="@+id/stageGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/stageBefore"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:buttonTint="#FFFFFF"
+                android:text="시험전"
+                android:textColor="#FFFFFF" />
+
+            <RadioButton
+                android:id="@+id/stageDuring"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:buttonTint="#FFFFFF"
+                android:text="시험중"
+                android:textColor="#FFFFFF" />
+
+            <RadioButton
+                android:id="@+id/stageAfter"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:buttonTint="#FFFFFF"
+                android:text="시험후"
+                android:textColor="#FFFFFF" />
+        </RadioGroup>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="시험항목"
+                android:textColor="#FFD65C"
+                android:textStyle="bold" />
+
+            <Spinner
+                android:id="@+id/itemSpinner"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:backgroundTint="#FFFFFF" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 미리보기 + 식별표 오버레이 -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.camera.view.PreviewView
+            android:id="@+id/preview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <com.lab.idcam.OverlayView
+            android:id="@+id/overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
+
+    <!-- 하단: 촬영 버튼 -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#111111"
+        android:padding="12dp">
+
+        <TextView
+            android:id="@+id/counter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="8dp"
+            android:text="촬영 0장"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp" />
+
+        <View
+            android:id="@+id/shutter"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_centerInParent="true"
+            android:background="@drawable/bg_shutter"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <Button
+            android:id="@+id/done"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:text="완료"
+            android:textColor="#FFFFFF" />
+    </RelativeLayout>
+</LinearLayout>
