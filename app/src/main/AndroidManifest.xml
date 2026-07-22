@@ -25,6 +25,7 @@
 
         <activity android:name=".ReceiptActivity" android:screenOrientation="portrait" />
         <activity android:name=".CameraActivity" android:screenOrientation="portrait" />
+        <activity android:name=".ScanActivity" android:screenOrientation="portrait" />
         <activity android:name=".GalleryActivity" android:screenOrientation="portrait" />
         <activity android:name=".TestItemsActivity" android:screenOrientation="portrait" />
     </application>

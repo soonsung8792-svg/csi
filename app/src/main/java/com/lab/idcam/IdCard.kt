@@ -10,7 +10,7 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * 화면 우측 하단에 붙는 "시료식별표" 카드.
+ * 화면 우측 하단에 붙는 "시험정보" 카드.
  * 카메라 미리보기(OverlayView)와 실제 저장되는 사진 모두 같은 그림을 사용한다.
  */
 object IdCard {

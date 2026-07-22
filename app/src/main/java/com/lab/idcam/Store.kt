@@ -38,8 +38,7 @@ object Store {
         receipts.clear()
         testItems.clear()
         if (!file.exists()) {
-            // 최초 실행 시 기본 시험항목
-            testItems.addAll(listOf("압축강도", "비중", "흡수율"))
+            // 최초 실행 시 시험항목은 비어 있음 (사용자가 직접 추가)
             save()
             return
         }
@@ -74,8 +73,7 @@ object Store {
                 receipts.add(rec)
             }
         } catch (e: Exception) {
-            // 파일 손상 시 초기화
-            testItems.addAll(listOf("압축강도", "비중", "흡수율"))
+            // 파일 손상 시 초기화 (빈 목록)
         }
     }
 

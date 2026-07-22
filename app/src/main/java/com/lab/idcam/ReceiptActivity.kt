@@ -1,8 +1,10 @@
 package com.lab.idcam
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.lab.idcam.databinding.ActivityReceiptBinding
 
@@ -10,6 +12,24 @@ class ReceiptActivity : AppCompatActivity() {
 
     private lateinit var b: ActivityReceiptBinding
     private var receipt: Receipt? = null
+
+    private val scanLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val d = result.data ?: return@registerForActivityResult
+            fun put(field: android.widget.EditText, key: String) {
+                val v = d.getStringExtra(key) ?: ""
+                if (v.isNotBlank()) field.setText(v)
+            }
+            put(b.receiptNo, "receiptNo")
+            put(b.csiNo, "csiNo")
+            put(b.workName, "workName")
+            put(b.sampleName, "sampleName")
+            put(b.note, "note")
+            Toast.makeText(this, "인식 완료 — 내용을 확인하고 수정하세요", Toast.LENGTH_LONG).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,6 +49,9 @@ class ReceiptActivity : AppCompatActivity() {
             b.btnGallery.visibility = android.view.View.VISIBLE
         }
 
+        b.btnScan.setOnClickListener {
+            scanLauncher.launch(Intent(this, ScanActivity::class.java))
+        }
         b.btnSaveShoot.setOnClickListener { saveThen(shoot = true) }
         b.btnSaveOnly.setOnClickListener { saveThen(shoot = false) }
         b.btnGallery.setOnClickListener {

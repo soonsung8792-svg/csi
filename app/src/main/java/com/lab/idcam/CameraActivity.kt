@@ -11,7 +11,9 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.ArrayAdapter
+import android.widget.EditText
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
@@ -51,11 +53,8 @@ class CameraActivity : AppCompatActivity() {
         receipt = found
 
         // 시험항목 스피너 (사용자가 관리한 목록)
-        val items = Store.testItems.toMutableList()
-        if (items.isEmpty()) items.add("(항목없음)")
-        b.itemSpinner.adapter = ArrayAdapter(
-            this, android.R.layout.simple_spinner_dropdown_item, items
-        )
+        refreshItemSpinner()
+        b.addItem.setOnClickListener { showAddItemDialog() }
 
         // 시험단계 라디오
         b.stageGroup.setOnCheckedChangeListener { _, checkedId ->
@@ -79,12 +78,46 @@ class CameraActivity : AppCompatActivity() {
         refreshOverlay()
     }
 
-    private fun currentItem(): String =
-        (b.itemSpinner.selectedItem as? String) ?: ""
+    private fun refreshItemSpinner(selectName: String? = null) {
+        val items = Store.testItems.toMutableList()
+        if (items.isEmpty()) items.add("(＋로 시험항목 추가)")
+        b.itemSpinner.adapter = ArrayAdapter(
+            this, android.R.layout.simple_spinner_dropdown_item, items
+        )
+        val idx = selectName?.let { items.indexOf(it) } ?: -1
+        if (idx >= 0) b.itemSpinner.setSelection(idx)
+    }
+
+    private fun showAddItemDialog() {
+        val input = EditText(this).apply {
+            hint = "예: 인장강도"
+            setPadding(48, 32, 48, 32)
+        }
+        AlertDialog.Builder(this)
+            .setTitle("시험항목 추가")
+            .setView(input)
+            .setPositiveButton("추가") { _, _ ->
+                val name = input.text.toString().trim()
+                if (name.isBlank()) return@setPositiveButton
+                if (!Store.testItems.contains(name)) {
+                    Store.testItems.add(name)
+                    Store.save()
+                }
+                refreshItemSpinner(selectName = name)
+                refreshOverlay()
+            }
+            .setNegativeButton("취소", null)
+            .show()
+    }
+
+    private fun currentItem(): String {
+        val s = (b.itemSpinner.selectedItem as? String) ?: ""
+        return if (s.startsWith("(")) "" else s
+    }
 
     private fun refreshOverlay() {
         val rows = IdCard.rows(stage, currentItem(), receipt, System.currentTimeMillis())
-        b.overlay.update("시료식별표", rows)
+        b.overlay.update("시험정보", rows)
         b.counter.text = "촬영 ${receipt.photos.size}장"
     }
 
@@ -150,7 +183,7 @@ class CameraActivity : AppCompatActivity() {
         })
     }
 
-    /** 임시 JPEG -> 회전보정 -> 식별표 합성 -> MediaStore(Pictures/시료식별표/접수번호) 저장 */
+    /** 임시 JPEG -> 회전보정 -> 식별표 합성 -> MediaStore(Pictures/시험정보/접수번호) 저장 */
     private fun processAndSave(temp: File, stageNow: String, itemNow: String, time: Long): Uri? {
         var bmp = BitmapFactory.decodeFile(temp.absolutePath) ?: return null
 
@@ -175,13 +208,13 @@ class CameraActivity : AppCompatActivity() {
         val out = bmp.copy(Bitmap.Config.ARGB_8888, true)
         val canvas = Canvas(out)
         val rows = IdCard.rows(stageNow, itemNow, receipt, time)
-        IdCard.draw(canvas, out.width, out.height, "시료식별표", rows, sizeFactor = 0.024f)
+        IdCard.draw(canvas, out.width, out.height, "시험정보", rows, sizeFactor = 0.024f)
 
         // 파일명 / 폴더명
         val stamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.KOREA).format(Date(time))
         val safeNo = sanitize(receipt.receiptNo.ifBlank { "접수미지정" })
         val name = "${safeNo}_${stageNow}_${sanitize(itemNow)}_$stamp.jpg"
-        val folder = "Pictures/시료식별표/$safeNo"
+        val folder = "Pictures/시험정보/$safeNo"
 
         val values = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, name)

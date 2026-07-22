@@ -20,6 +20,23 @@
             android:textSize="20sp"
             android:textStyle="bold" />
 
+        <Button
+            android:id="@+id/btnScan"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:backgroundTint="@color/accent"
+            android:text="📷 신청서 스캔해서 자동입력"
+            android:textSize="16sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="스캔 후 인식된 내용을 확인하고 필요하면 고치세요."
+            android:textColor="@color/textSub"
+            android:textSize="12sp" />
+
         <TextView style="@style/LabelStyle" android:text="접수번호" />
         <EditText
             android:id="@+id/receiptNo"

@@ -68,6 +68,16 @@
                 android:layout_marginStart="10dp"
                 android:layout_weight="1"
                 android:backgroundTint="#FFFFFF" />
+
+            <Button
+                android:id="@+id/addItem"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:minWidth="0dp"
+                android:paddingHorizontal="16dp"
+                android:text="＋"
+                android:textSize="18sp" />
         </LinearLayout>
     </LinearLayout>
 
