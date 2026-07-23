@@ -75,17 +75,23 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "불러올 내용이 없습니다. 양식을 확인하세요", Toast.LENGTH_LONG).show()
                 return
             }
-            var added = 0; var updated = 0
+            var added = 0; var updated = 0; var newItems = 0
             for (row in rows) {
+                // 시험항목은 전체 목록(재사용 풀)에도 모아둠
+                for (n in row.items) {
+                    if (!Store.testItems.contains(n)) { Store.testItems.add(n); newItems++ }
+                }
                 val ex = Store.receipts.firstOrNull { it.receiptNo == row.receiptNo }
                 if (ex != null) {
                     ex.csiNo = row.csiNo; ex.workName = row.workName
                     ex.sampleName = row.sampleName; ex.note = row.note
+                    if (row.items.isNotEmpty()) ex.items = row.items.toMutableList()
                     updated++
                 } else {
                     Store.receipts.add(0, Receipt(
                         receiptNo = row.receiptNo, csiNo = row.csiNo,
-                        workName = row.workName, sampleName = row.sampleName, note = row.note
+                        workName = row.workName, sampleName = row.sampleName, note = row.note,
+                        items = row.items.toMutableList()
                     ))
                     added++
                 }
@@ -93,7 +99,9 @@ class MainActivity : AppCompatActivity() {
             Store.save()
             adapter.submit(Store.receipts.toList())
             b.empty.visibility = if (Store.receipts.isEmpty()) View.VISIBLE else View.GONE
-            Toast.makeText(this, "불러오기 완료 — 새로 ${added}건, 갱신 ${updated}건", Toast.LENGTH_LONG).show()
+            var msg = "불러오기 완료 — 새로 ${added}건, 갱신 ${updated}건"
+            if (newItems > 0) msg += ", 시험항목 ${newItems}개"
+            Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
         } catch (e: Exception) {
             Toast.makeText(this, "불러오기 실패: ${e.message}", Toast.LENGTH_LONG).show()
         }

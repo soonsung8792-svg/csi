@@ -21,6 +21,7 @@ data class Receipt(
     var workName: String = "",
     var sampleName: String = "",
     var note: String = "",
+    var items: MutableList<String> = mutableListOf(),   // 이 접수건 전용 시험항목
     val photos: MutableList<Photo> = mutableListOf()
 )
 
@@ -58,6 +59,8 @@ object Store {
                     sampleName = r.optString("sampleName"),
                     note = r.optString("note")
                 )
+                val its = r.optJSONArray("items") ?: JSONArray()
+                for (j in 0 until its.length()) rec.items.add(its.getString(j))
                 val ps = r.optJSONArray("photos") ?: JSONArray()
                 for (j in 0 until ps.length()) {
                     val p = ps.getJSONObject(j)
@@ -89,6 +92,7 @@ object Store {
             r.put("workName", rec.workName)
             r.put("sampleName", rec.sampleName)
             r.put("note", rec.note)
+            r.put("items", JSONArray(rec.items))
             val ps = JSONArray()
             for (p in rec.photos) {
                 val o = JSONObject()

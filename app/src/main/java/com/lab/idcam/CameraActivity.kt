@@ -91,8 +91,13 @@ class CameraActivity : AppCompatActivity() {
         refreshOverlay()
     }
 
+    /** 이 접수건에 지정된 시험항목이 있으면 그것만, 없으면 전체 목록 */
+    private fun itemsForCurrent(): MutableList<String> =
+        if (receipt.items.isNotEmpty()) receipt.items.toMutableList()
+        else Store.testItems.toMutableList()
+
     private fun refreshItemSpinner(selectName: String? = null) {
-        val items = Store.testItems.toMutableList()
+        val items = itemsForCurrent()
         if (items.isEmpty()) items.add("(＋로 시험항목 추가)")
         b.itemSpinner.adapter = ArrayAdapter(
             this, android.R.layout.simple_spinner_dropdown_item, items
@@ -112,10 +117,9 @@ class CameraActivity : AppCompatActivity() {
             .setPositiveButton("추가") { _, _ ->
                 val name = input.text.toString().trim()
                 if (name.isBlank()) return@setPositiveButton
-                if (!Store.testItems.contains(name)) {
-                    Store.testItems.add(name)
-                    Store.save()
-                }
+                if (receipt.items.isNotEmpty() && !receipt.items.contains(name)) receipt.items.add(name)
+                if (!Store.testItems.contains(name)) Store.testItems.add(name)
+                Store.save()
                 refreshItemSpinner(selectName = name)
                 refreshOverlay()
             }
