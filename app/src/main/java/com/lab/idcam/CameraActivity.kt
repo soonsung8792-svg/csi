@@ -10,6 +10,13 @@ import android.graphics.Matrix
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.media.AudioManager
+import android.media.ToneGenerator
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
+import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.Toast
@@ -25,9 +32,6 @@ import androidx.core.content.ContextCompat
 import androidx.exifinterface.media.ExifInterface
 import com.lab.idcam.databinding.ActivityCameraBinding
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import java.util.concurrent.Executors
 
 class CameraActivity : AppCompatActivity() {
@@ -55,6 +59,15 @@ class CameraActivity : AppCompatActivity() {
         // 시험항목 스피너 (사용자가 관리한 목록)
         refreshItemSpinner()
         b.addItem.setOnClickListener { showAddItemDialog() }
+
+        // 시료번호 (기본 #1, ＋/− 로 증감)
+        b.samplePlus.setOnClickListener { stepSample(1) }
+        b.sampleMinus.setOnClickListener { stepSample(-1) }
+        b.sampleNo.addTextChangedListener(object : android.text.TextWatcher {
+            override fun afterTextChanged(s: android.text.Editable?) { refreshOverlay() }
+            override fun beforeTextChanged(s: CharSequence?, a: Int, bC: Int, c: Int) {}
+            override fun onTextChanged(s: CharSequence?, a: Int, bC: Int, c: Int) {}
+        })
 
         // 시험단계 라디오
         b.stageGroup.setOnCheckedChangeListener { _, checkedId ->
@@ -110,13 +123,67 @@ class CameraActivity : AppCompatActivity() {
             .show()
     }
 
+    /* ---------- 촬영 피드백 ---------- */
+    private fun flashScreen() {
+        b.flash.alpha = 0.9f
+        b.flash.animate().alpha(0f).setDuration(320).start()
+    }
+
+    private fun beep() {
+        try {
+            val tg = ToneGenerator(AudioManager.STREAM_MUSIC, 80)
+            tg.startTone(ToneGenerator.TONE_PROP_BEEP, 120)
+            b.flash.postDelayed({ tg.release() }, 300)
+        } catch (e: Exception) { }
+    }
+
+    private fun vibrate(ms: Long) {
+        try {
+            val v = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                (getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
+            } else {
+                @Suppress("DEPRECATION")
+                getSystemService(VIBRATOR_SERVICE) as Vibrator
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                v.vibrate(VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE))
+            } else {
+                @Suppress("DEPRECATION") v.vibrate(ms)
+            }
+        } catch (e: Exception) { }
+    }
+
+    private fun showSavedBadge() {
+        b.savedBadge.visibility = View.VISIBLE
+        b.savedBadge.alpha = 1f
+        b.savedBadge.animate().alpha(0f).setStartDelay(700).setDuration(300)
+            .withEndAction { b.savedBadge.visibility = View.GONE }.start()
+    }
+
+    private fun currentSampleNo(): String {
+        val v = b.sampleNo.text.toString().trim()
+        return if (v.isBlank()) "#1" else v
+    }
+
+    private fun stepSample(delta: Int) {
+        val cur = currentSampleNo()
+        val m = Regex("^(\\D*)(\\d+)(\\D*)$").find(cur)
+        if (m != null) {
+            var n = m.groupValues[2].toInt() + delta
+            if (n < 1) n = 1
+            b.sampleNo.setText("${m.groupValues[1]}$n${m.groupValues[3]}")
+        } else {
+            b.sampleNo.setText("#1")
+        }
+    }
+
     private fun currentItem(): String {
         val s = (b.itemSpinner.selectedItem as? String) ?: ""
         return if (s.startsWith("(")) "" else s
     }
 
     private fun refreshOverlay() {
-        val rows = IdCard.rows(stage, currentItem(), receipt, System.currentTimeMillis())
+        val rows = IdCard.rows(stage, currentItem(), currentSampleNo(), receipt)
         b.overlay.update("시험정보", rows)
         b.counter.text = "촬영 ${receipt.photos.size}장"
     }
@@ -145,6 +212,8 @@ class CameraActivity : AppCompatActivity() {
     private fun takePhoto() {
         val ic = imageCapture ?: return
         b.shutter.isEnabled = false
+        flashScreen(); beep(); vibrate(60)
+        val sampleNow = currentSampleNo()
         val temp = File(cacheDir, "cap_${System.currentTimeMillis()}.jpg")
         val opts = ImageCapture.OutputFileOptions.Builder(temp).build()
         ic.takePicture(opts, exec, object : ImageCapture.OnImageSavedCallback {
@@ -160,7 +229,7 @@ class CameraActivity : AppCompatActivity() {
                     val stageNow = stage
                     val itemNow = currentItem()
                     val time = System.currentTimeMillis()
-                    val uri = processAndSave(temp, stageNow, itemNow, time)
+                    val uri = processAndSave(temp, stageNow, itemNow, sampleNow, time)
                     temp.delete()
                     runOnUiThread {
                         b.shutter.isEnabled = true
@@ -168,7 +237,8 @@ class CameraActivity : AppCompatActivity() {
                             receipt.photos.add(Photo(uri.toString(), stageNow, itemNow, time))
                             Store.save()
                             refreshOverlay()
-                            Toast.makeText(this@CameraActivity, "저장 완료 (갤러리)", Toast.LENGTH_SHORT).show()
+                            showSavedBadge()
+                            vibrate(40)
                         } else {
                             Toast.makeText(this@CameraActivity, "저장 실패", Toast.LENGTH_LONG).show()
                         }
@@ -184,7 +254,8 @@ class CameraActivity : AppCompatActivity() {
     }
 
     /** 임시 JPEG -> 회전보정 -> 식별표 합성 -> MediaStore(Pictures/시험정보/접수번호) 저장 */
-    private fun processAndSave(temp: File, stageNow: String, itemNow: String, time: Long): Uri? {
+    private fun processAndSave(temp: File, stageNow: String, itemNow: String,
+                               sampleNow: String, time: Long): Uri? {
         var bmp = BitmapFactory.decodeFile(temp.absolutePath) ?: return null
 
         // EXIF 회전 보정 -> 사진을 항상 똑바로 세운다 (식별표가 옆으로 눕지 않도록)
@@ -207,13 +278,13 @@ class CameraActivity : AppCompatActivity() {
         // 식별표 합성
         val out = bmp.copy(Bitmap.Config.ARGB_8888, true)
         val canvas = Canvas(out)
-        val rows = IdCard.rows(stageNow, itemNow, receipt, time)
+        val rows = IdCard.rows(stageNow, itemNow, sampleNow, receipt)
         IdCard.draw(canvas, out.width, out.height, "시험정보", rows, sizeFactor = 0.024f)
 
         // 파일명 / 폴더명
-        val stamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.KOREA).format(Date(time))
         val safeNo = sanitize(receipt.receiptNo.ifBlank { "접수미지정" })
-        val name = "${safeNo}_${stageNow}_${sanitize(itemNow)}_$stamp.jpg"
+        // 파일명: 시료번호_시험항목_시험단계  (예: #1_인장강도_시험전)
+        val name = "${sanitize(sampleNow)}_${sanitize(itemNow)}_$stageNow.jpg"
         val folder = "Pictures/시험정보/$safeNo"
 
         val values = ContentValues().apply {

@@ -5,9 +5,6 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 /**
  * 화면 우측 하단에 붙는 "시험정보" 카드.
@@ -16,17 +13,16 @@ import java.util.Locale
 object IdCard {
 
     /** 표에 들어갈 (라벨, 값) 목록 만들기 */
-    fun rows(stage: String, item: String, r: Receipt, time: Long): List<Pair<String, String>> {
-        val fmt = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.KOREA)
+    fun rows(stage: String, item: String, sampleNo: String, r: Receipt): List<Pair<String, String>> {
         return listOf(
             "시험단계" to stage,
             "시험항목" to item,
+            "시료번호" to sampleNo,
             "접수번호" to r.receiptNo,
             "CSI접수번호" to r.csiNo,
             "공사명" to r.workName,
             "시료명" to r.sampleName,
-            "비고" to r.note,
-            "일시" to fmt.format(Date(time))
+            "비고" to r.note
         )
     }
 

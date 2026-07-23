@@ -41,35 +41,35 @@
         <EditText
             android:id="@+id/receiptNo"
             style="@style/FieldStyle"
-            android:hint="예: M253-26-00269"
+            android:hint="M253-00-00000"
             android:inputType="textCapCharacters" />
 
         <TextView style="@style/LabelStyle" android:text="CSI 접수번호" />
         <EditText
             android:id="@+id/csiNo"
             style="@style/FieldStyle"
-            android:hint="예: AC-2026-067251"
+            android:hint="AC-0000-000000"
             android:inputType="textCapCharacters" />
 
         <TextView style="@style/LabelStyle" android:text="공사명 (현장명)" />
         <EditText
             android:id="@+id/workName"
             style="@style/FieldStyle"
-            android:hint="예: 사석"
+            android:hint="신청서 참고"
             android:inputType="text" />
 
         <TextView style="@style/LabelStyle" android:text="시료명" />
         <EditText
             android:id="@+id/sampleName"
             style="@style/FieldStyle"
-            android:hint="예: 남면 학동항 정비공사(총괄 및 1차분)"
+            android:hint="신청서 참고"
             android:inputType="text" />
 
         <TextView style="@style/LabelStyle" android:text="비고" />
         <EditText
             android:id="@+id/note"
             style="@style/FieldStyle"
-            android:hint="(선택)"
+            android:hint="시료번호 등 입력"
             android:inputType="text" />
 
         <Button
