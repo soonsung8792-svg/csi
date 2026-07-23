@@ -66,13 +66,25 @@ class MainActivity : AppCompatActivity() {
     private fun importCsv(uri: Uri) {
         try {
             val bytes = contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: return
+            // 엑셀 원본(.xlsx)은 압축파일이라 읽을 수 없음
+            if (bytes.size > 2 && bytes[0] == 0x50.toByte() && bytes[1] == 0x4B.toByte()) {
+                AlertDialog.Builder(this)
+                    .setTitle("엑셀 파일은 읽을 수 없어요")
+                    .setMessage("엑셀에서 [다른 이름으로 저장] → 파일 형식을 'CSV UTF-8(쉼표로 분리)'로 골라 저장한 뒤, 그 파일을 올려주세요.")
+                    .setPositiveButton("확인", null).show()
+                return
+            }
             var text = String(bytes, Charsets.UTF_8)
             if (text.contains('\uFFFD')) {          // 한글이 깨지면 엑셀 기본(CP949)로 재시도
                 text = String(bytes, Charset.forName("EUC-KR"))
             }
             val rows = CsvHelper.parse(text)
             if (rows.isEmpty()) {
-                Toast.makeText(this, "불러올 내용이 없습니다. 양식을 확인하세요", Toast.LENGTH_LONG).show()
+                val first = text.lineSequence().firstOrNull { it.isNotBlank() }?.take(60) ?: "(비어 있음)"
+                AlertDialog.Builder(this)
+                    .setTitle("접수건을 찾지 못했어요")
+                    .setMessage("첫 줄: $first\n\n확인해 주세요:\n· 접수번호 칸이 채워져 있는지\n· 엑셀에서 'CSV UTF-8'로 저장했는지")
+                    .setPositiveButton("확인", null).show()
                 return
             }
             var added = 0; var updated = 0; var newItems = 0

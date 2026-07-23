@@ -18,8 +18,22 @@ object CsvHelper {
         val items: List<String>
     )
 
+    /** 헤더 줄을 보고 구분자 자동 감지 (쉼표 / 세미콜론 / 탭) */
+    fun detectDelimiter(text: String): Char {
+        val line = text.lineSequence().firstOrNull { it.isNotBlank() } ?: return ','
+        val counts = mutableMapOf(',' to 0, ';' to 0, '\t' to 0)
+        var q = false
+        for (ch in line) {
+            if (ch == '"') q = !q
+            else if (!q && counts.containsKey(ch)) counts[ch] = counts[ch]!! + 1
+        }
+        val best = counts.maxByOrNull { it.value }!!
+        return if (best.value == 0) ',' else best.key
+    }
+
     fun parse(text: String): List<Row> {
-        val rows = splitRows(text.removePrefix("\uFEFF"))
+        val clean = text.removePrefix("\uFEFF")
+        val rows = splitRows(clean, detectDelimiter(clean))
         if (rows.isEmpty()) return emptyList()
 
         var start = 0
@@ -63,10 +77,10 @@ object CsvHelper {
     fun splitItems(text: String): List<String> =
         if (text.isBlank()) emptyList()
         else text.split(';', ',', '/', '|', '\u00B7')
-            .map { it.trim() }.filter { it.isNotBlank() }
+            .map { it.trim() }.filter { it.isNotBlank() }.distinct()
 
     /** 따옴표(") 안의 쉼표까지 처리하는 CSV 분해기 */
-    private fun splitRows(text: String): List<List<String>> {
+    private fun splitRows(text: String, delim: Char = ','): List<List<String>> {
         val rows = mutableListOf<List<String>>()
         var row = mutableListOf<String>()
         val cell = StringBuilder()
@@ -82,7 +96,7 @@ object CsvHelper {
             } else {
                 when (ch) {
                     '"' -> quoted = true
-                    ',' -> { row.add(cell.toString()); cell.setLength(0) }
+                    delim -> { row.add(cell.toString()); cell.setLength(0) }
                     '\n' -> { row.add(cell.toString()); rows.add(row); row = mutableListOf(); cell.setLength(0) }
                     '\r' -> { }
                     else -> cell.append(ch)
